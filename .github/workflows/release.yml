@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-14
+            platform: darwin
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compute release version
+        id: version
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA::7}"
+          version="$(date -u +%Y.%-m.%-d)-${short_sha}"
+          package_suffix="$(node -p "require('./package.json').name.split('/').pop()")"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "package_suffix=${package_suffix}" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests
+        run: npm test
+
+      - name: Verify release artifact
+        run: npm run release:verify
+        env:
+          SERVICE_LASSO_RELEASE_VERSION: ${{ steps.version.outputs.version }}
+
+      - name: Upload staged source artifact folder
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-source
+          path: artifacts/${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-source
+
+      - name: Upload packaged source archive
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-source-archive
+          path: artifacts/${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-source.tar.gz
+
+      - name: Upload staged runtime artifact folder
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-runtime-${{ matrix.platform }}
+          path: artifacts/${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-runtime-${{ matrix.platform }}
+
+      - name: Upload staged bundled artifact folder
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-bundled-${{ matrix.platform }}
+          path: artifacts/${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-bundled-${{ matrix.platform }}
+
+      - name: Upload packaged runtime archive
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-runtime-${{ matrix.platform }}-archive
+          path: artifacts/${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-runtime-${{ matrix.platform }}.tar.gz
+
+      - name: Upload packaged bundled archive
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-bundled-${{ matrix.platform }}-archive
+          path: artifacts/${{ steps.version.outputs.package_suffix }}-${{ steps.version.outputs.version }}-bundled-${{ matrix.platform }}.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Compute release version
+        id: version
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA::7}"
+          version="$(date -u +%Y.%-m.%-d)-${short_sha}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          files: |
+            release-assets/*.tar.gz
+          generate_release_notes: true

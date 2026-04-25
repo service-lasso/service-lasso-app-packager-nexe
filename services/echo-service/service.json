@@ -1,0 +1,64 @@
+{
+  "id": "echo-service",
+  "name": "Echo Service",
+  "description": "Release-backed Echo Service harness for the app-packager-pkg starter bootstrap-download flow.",
+  "version": "2026.4.20-a417abd",
+  "enabled": true,
+  "artifact": {
+    "kind": "archive",
+    "source": {
+      "type": "github-release",
+      "repo": "service-lasso/lasso-echoservice",
+      "tag": "2026.4.20-a417abd",
+      "serviceManifestAssetUrl": "https://github.com/service-lasso/lasso-echoservice/releases/download/2026.4.20-a417abd/service.json"
+    },
+    "platforms": {
+      "win32": {
+        "assetName": "echo-service-win32.zip",
+        "assetUrl": "https://github.com/service-lasso/lasso-echoservice/releases/download/2026.4.20-a417abd/echo-service-win32.zip",
+        "archiveType": "zip",
+        "command": "./echo-service.exe",
+        "args": []
+      },
+      "linux": {
+        "assetName": "echo-service-linux.tar.gz",
+        "assetUrl": "https://github.com/service-lasso/lasso-echoservice/releases/download/2026.4.20-a417abd/echo-service-linux.tar.gz",
+        "archiveType": "tar.gz",
+        "command": "./echo-service",
+        "args": []
+      },
+      "darwin": {
+        "assetName": "echo-service-darwin.tar.gz",
+        "assetUrl": "https://github.com/service-lasso/lasso-echoservice/releases/download/2026.4.20-a417abd/echo-service-darwin.tar.gz",
+        "archiveType": "tar.gz",
+        "command": "./echo-service",
+        "args": []
+      }
+    }
+  },
+  "env": {
+    "ECHO_MESSAGE": "hello from service-lasso-app-packager-pkg",
+    "ECHO_PORT": "4030",
+    "ECHO_HTTP_HEALTH_PORT": "4031",
+    "ECHO_TCP_PORT": "4032",
+    "ECHO_LOG_PATH": "./runtime/echo.log",
+    "ECHO_STATE_PATH": "./runtime/state.json",
+    "ECHO_DB_PATH": "./runtime/echo.sqlite",
+    "SERVICE_LASSO_GLOBAL_ENV_JSON": "{\"ECHO_ENV_CHANNEL\":\"app-packager-pkg\"}"
+  },
+  "urls": [
+    {
+      "label": "ui",
+      "url": "http://127.0.0.1:4030/",
+      "kind": "local"
+    },
+    {
+      "label": "service",
+      "url": "http://127.0.0.1:4030/health",
+      "kind": "local"
+    }
+  ],
+  "healthcheck": {
+    "type": "process"
+  }
+}

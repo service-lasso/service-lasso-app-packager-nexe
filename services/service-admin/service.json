@@ -1,0 +1,14 @@
+{
+  "id": "service-admin",
+  "name": "Service Admin",
+  "description": "Embedded Service Admin UI surfaced by the app-packager-pkg starter host.",
+  "version": "0.1.0",
+  "enabled": false,
+  "urls": [
+    {
+      "label": "ui",
+      "url": "http://127.0.0.1:19030/admin/",
+      "kind": "local"
+    }
+  ]
+}
