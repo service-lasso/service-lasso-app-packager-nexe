@@ -1,7 +1,7 @@
 {
   "id": "echo-service",
   "name": "Echo Service",
-  "description": "Release-backed Echo Service harness for the app-packager-pkg starter bootstrap-download flow.",
+  "description": "Release-backed Echo Service harness for the app-packager-nexe starter bootstrap-download flow.",
   "version": "2026.4.20-a417abd",
   "enabled": true,
   "artifact": {
@@ -37,14 +37,14 @@
     }
   },
   "env": {
-    "ECHO_MESSAGE": "hello from service-lasso-app-packager-pkg",
+    "ECHO_MESSAGE": "hello from service-lasso-app-packager-nexe",
     "ECHO_PORT": "4030",
     "ECHO_HTTP_HEALTH_PORT": "4031",
     "ECHO_TCP_PORT": "4032",
     "ECHO_LOG_PATH": "./runtime/echo.log",
     "ECHO_STATE_PATH": "./runtime/state.json",
     "ECHO_DB_PATH": "./runtime/echo.sqlite",
-    "SERVICE_LASSO_GLOBAL_ENV_JSON": "{\"ECHO_ENV_CHANNEL\":\"app-packager-pkg\"}"
+    "SERVICE_LASSO_GLOBAL_ENV_JSON": "{\"ECHO_ENV_CHANNEL\":\"app-packager-nexe\"}"
   },
   "urls": [
     {

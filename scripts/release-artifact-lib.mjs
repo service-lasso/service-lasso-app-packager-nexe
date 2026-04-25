@@ -30,7 +30,8 @@ const RUNTIME_RELEASE_PATHS = [
 ];
 
 const NPM_COMMAND = process.platform === "win32" ? "npm.cmd" : "npm";
-const PKG_VERSION = "5.8.1";
+const NEXE_VERSION = "3.3.7";
+const NEXE_NODE_VERSION = "14.15.3";
 
 export async function readRootPackageJson(repoRoot) {
   return JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8"));
@@ -54,28 +55,28 @@ function getArtifactPlatform() {
   return process.platform;
 }
 
-export function getPkgExecutableName(packageSuffix = "service-lasso-app-packager-pkg") {
+export function getNexeExecutableName(packageSuffix = "service-lasso-app-packager-nexe") {
   return process.platform === "win32" ? `${packageSuffix}.exe` : packageSuffix;
 }
 
-export function getPkgOutputPath(outputRoot, packageSuffix = "service-lasso-app-packager-pkg") {
-  return path.join(outputRoot, getPkgExecutableName(packageSuffix));
+export function getNexeOutputPath(outputRoot, packageSuffix = "service-lasso-app-packager-nexe") {
+  return path.join(outputRoot, getNexeExecutableName(packageSuffix));
 }
 
 function getBundledNodeBinaryName() {
   return process.platform === "win32" ? "node.exe" : "node";
 }
 
-function getPkgTarget() {
+function getNexeTarget() {
   if (process.platform === "win32") {
-    return "node18-win-x64";
+    return `windows-x64-${NEXE_NODE_VERSION}`;
   }
 
   if (process.platform === "darwin") {
-    return process.arch === "arm64" ? "node18-macos-arm64" : "node18-macos-x64";
+    return `mac-x64-${NEXE_NODE_VERSION}`;
   }
 
-  return "node18-linux-x64";
+  return `linux-x64-${NEXE_NODE_VERSION}`;
 }
 
 async function pathExists(targetPath) {
@@ -224,9 +225,9 @@ async function installStarterDependencies(stagedRoot, repoRoot) {
   });
 }
 
-export async function buildPkgWrapper({ workingRoot, launcherPath, outputPath }) {
+export async function buildNexeWrapper({ workingRoot, launcherPath, outputPath }) {
   const resolvedWorkingRoot = workingRoot ?? path.dirname(outputPath);
-  const resolvedLauncherPath = launcherPath ?? path.join(resolvedWorkingRoot, "src", "pkg-launcher.cjs");
+  const resolvedLauncherPath = launcherPath ?? path.join(resolvedWorkingRoot, "src", "nexe-launcher.cjs");
   const resolvedOutputPath = path.resolve(outputPath);
   await mkdir(path.dirname(outputPath), { recursive: true });
   const launcherArg =
@@ -238,14 +239,14 @@ export async function buildPkgWrapper({ workingRoot, launcherPath, outputPath })
     [
       "exec",
       "--yes",
-      `--package=pkg@${PKG_VERSION}`,
+      `--package=nexe@${NEXE_VERSION}`,
       "--",
-      "pkg",
+      "nexe",
       launcherArg,
-      "--target",
-      getPkgTarget(),
       "--output",
       outputArg,
+      "--target",
+      getNexeTarget(),
     ],
     {
       cwd: resolvedWorkingRoot,
@@ -296,7 +297,7 @@ async function stageSingleArtifact({
   installDependencies = false,
   adminDistRoot = null,
   bundledArchive = null,
-  buildPkgExecutable = false,
+  buildNexeExecutable = false,
 }) {
   const artifactRoot = path.join(outputRoot, artifactName);
   await rm(artifactRoot, { recursive: true, force: true });
@@ -333,17 +334,17 @@ async function stageSingleArtifact({
 
   const packageJson = await readRootPackageJson(repoRoot);
   const packageSuffix = getPackageSuffix(packageJson);
-  let pkgExecutableRelativePath = null;
+  let nexeExecutableRelativePath = null;
 
-  if (buildPkgExecutable) {
-    pkgExecutableRelativePath = getPkgExecutableName(packageSuffix);
+  if (buildNexeExecutable) {
+    nexeExecutableRelativePath = getNexeExecutableName(packageSuffix);
     const bundledNodePath = path.join(artifactRoot, "node-runtime", getBundledNodeBinaryName());
     await mkdir(path.dirname(bundledNodePath), { recursive: true });
     await cp(process.execPath, bundledNodePath, { force: true });
-    await buildPkgWrapper({
+    await buildNexeWrapper({
       workingRoot: artifactRoot,
-      launcherPath: path.join(artifactRoot, "src", "pkg-launcher.cjs"),
-      outputPath: path.join(artifactRoot, pkgExecutableRelativePath),
+      launcherPath: path.join(artifactRoot, "src", "nexe-launcher.cjs"),
+      outputPath: path.join(artifactRoot, nexeExecutableRelativePath),
     });
   }
 
@@ -357,12 +358,12 @@ async function stageSingleArtifact({
       ...relativePaths,
       ...(installDependencies ? ["node_modules"] : []),
       ...(adminDistRoot ? [".payload"] : []),
-      ...(buildPkgExecutable ? ["node-runtime"] : []),
+      ...(buildNexeExecutable ? ["node-runtime"] : []),
       ...(bundledArchive ? [`services/echo-service/.state/artifacts/${bundledArchive.releaseTag}/${bundledArchive.assetName}`] : []),
-      ...(pkgExecutableRelativePath ? [pkgExecutableRelativePath] : []),
+      ...(nexeExecutableRelativePath ? [nexeExecutableRelativePath] : []),
       "release-artifact.json",
     ],
-    startCommand: pkgExecutableRelativePath ? `./${pkgExecutableRelativePath}` : "npm start",
+    startCommand: nexeExecutableRelativePath ? `./${nexeExecutableRelativePath}` : "npm start",
     notes,
   });
   const archivePath = await createReleaseArchive(outputRoot, artifactName);
@@ -372,7 +373,7 @@ async function stageSingleArtifact({
     artifactRoot,
     archivePath,
     manifest,
-    pkgExecutablePath: pkgExecutableRelativePath ? path.join(artifactRoot, pkgExecutableRelativePath) : null,
+    nexeExecutablePath: nexeExecutableRelativePath ? path.join(artifactRoot, nexeExecutableRelativePath) : null,
   };
 }
 
@@ -457,7 +458,7 @@ async function createVerificationAdminDist(rootDir) {
 async function resolveReleaseAdminDist(repoRoot, outputRoot, sourceAdminDistRoot) {
   const candidates = [
     sourceAdminDistRoot,
-    process.env.SERVICE_LASSO_APP_PACKAGER_PKG_ADMIN_DIST_ROOT,
+    process.env.SERVICE_LASSO_APP_PACKAGER_NEXE_ADMIN_DIST_ROOT,
     path.resolve(repoRoot, "..", "lasso-@serviceadmin", "dist"),
   ].filter(Boolean);
 
@@ -659,7 +660,7 @@ async function smokeHost({ command, args, cwd, env }) {
 
     void (async () => {
       try {
-        const hostStatus = await waitForJson(`http://127.0.0.1:${env.SERVICE_LASSO_APP_PACKAGER_PKG_HOST_PORT}/api/host-status`);
+        const hostStatus = await waitForJson(`http://127.0.0.1:${env.SERVICE_LASSO_APP_PACKAGER_NEXE_HOST_PORT}/api/host-status`);
         const runtimeHealth = await waitForJson(`http://127.0.0.1:${env.SERVICE_LASSO_API_PORT}/api/health`);
 
         finish(() =>
@@ -721,9 +722,9 @@ async function verifySourceArtifact({ repoRoot, artifactRoot, archivePath }) {
     cwd: artifactRoot,
     env: {
       ...process.env,
-      SERVICE_LASSO_APP_PACKAGER_PKG_HOST_PORT: hostPort,
+      SERVICE_LASSO_APP_PACKAGER_NEXE_HOST_PORT: hostPort,
       SERVICE_LASSO_API_PORT: runtimePort,
-      SERVICE_LASSO_APP_PACKAGER_PKG_ADMIN_DIST_ROOT: adminDistRoot,
+      SERVICE_LASSO_APP_PACKAGER_NEXE_ADMIN_DIST_ROOT: adminDistRoot,
       SERVICE_LASSO_WORKSPACE_ROOT: path.join(artifactRoot, ".workspace", "runtime"),
     },
   });
@@ -745,8 +746,8 @@ async function verifyRuntimeArtifact({ artifactRoot, archivePath }) {
   await stat(path.join(artifactRoot, "node_modules"));
   await stat(path.join(artifactRoot, ".payload", "admin", "index.html"));
   const artifactPackage = JSON.parse(await readFile(path.join(artifactRoot, "package.json"), "utf8"));
-  const pkgExecutablePath = getPkgOutputPath(artifactRoot, getPackageSuffix(artifactPackage));
-  await stat(pkgExecutablePath);
+  const nexeExecutablePath = getNexeOutputPath(artifactRoot, getPackageSuffix(artifactPackage));
+  await stat(nexeExecutablePath);
 
   const fixture = await createVerificationReleaseFixture(artifactRoot);
   const archiveServer = await startArchiveServer(fixture);
@@ -754,14 +755,14 @@ async function verifyRuntimeArtifact({ artifactRoot, archivePath }) {
   const hostPort = await reserveLoopbackPort();
   const runtimePort = await reserveLoopbackPort();
   const smoke = await smokeHost({
-    command: pkgExecutablePath,
+    command: nexeExecutablePath,
     args: [],
     cwd: artifactRoot,
     env: {
       ...process.env,
-      SERVICE_LASSO_APP_PACKAGER_PKG_HOST_PORT: hostPort,
+      SERVICE_LASSO_APP_PACKAGER_NEXE_HOST_PORT: hostPort,
       SERVICE_LASSO_API_PORT: runtimePort,
-      SERVICE_LASSO_APP_PACKAGER_PKG_SOURCE_SERVICES_ROOT: sourceServicesRoot,
+      SERVICE_LASSO_APP_PACKAGER_NEXE_SOURCE_SERVICES_ROOT: sourceServicesRoot,
       SERVICE_LASSO_WORKSPACE_ROOT: path.join(artifactRoot, ".workspace", "runtime"),
     },
   });
@@ -785,7 +786,7 @@ async function verifyRuntimeArtifact({ artifactRoot, archivePath }) {
       archiveDownloads: archiveServer.getRequestCount(),
       installStatus: install.status,
       lifecycleState: serviceDetail.lifecycleState ?? null,
-      wrapper: path.basename(pkgExecutablePath),
+      wrapper: path.basename(nexeExecutablePath),
     };
   } finally {
     await shutdownSmokedHost(smoke, "SIGINT");
@@ -800,8 +801,8 @@ async function verifyBundledArtifact({ artifactRoot, archivePath }) {
   await stat(path.join(artifactRoot, "node_modules"));
   await stat(path.join(artifactRoot, ".payload", "admin", "index.html"));
   const artifactPackage = JSON.parse(await readFile(path.join(artifactRoot, "package.json"), "utf8"));
-  const pkgExecutablePath = getPkgOutputPath(artifactRoot, getPackageSuffix(artifactPackage));
-  await stat(pkgExecutablePath);
+  const nexeExecutablePath = getNexeOutputPath(artifactRoot, getPackageSuffix(artifactPackage));
+  await stat(nexeExecutablePath);
 
   const fixture = await createVerificationReleaseFixture(artifactRoot);
   const archiveServer = await startArchiveServer(fixture);
@@ -821,14 +822,14 @@ async function verifyBundledArtifact({ artifactRoot, archivePath }) {
   const hostPort = await reserveLoopbackPort();
   const runtimePort = await reserveLoopbackPort();
   const smoke = await smokeHost({
-    command: pkgExecutablePath,
+    command: nexeExecutablePath,
     args: [],
     cwd: artifactRoot,
     env: {
       ...process.env,
-      SERVICE_LASSO_APP_PACKAGER_PKG_HOST_PORT: hostPort,
+      SERVICE_LASSO_APP_PACKAGER_NEXE_HOST_PORT: hostPort,
       SERVICE_LASSO_API_PORT: runtimePort,
-      SERVICE_LASSO_APP_PACKAGER_PKG_SOURCE_SERVICES_ROOT: sourceServicesRoot,
+      SERVICE_LASSO_APP_PACKAGER_NEXE_SOURCE_SERVICES_ROOT: sourceServicesRoot,
       SERVICE_LASSO_WORKSPACE_ROOT: path.join(artifactRoot, ".workspace", "runtime"),
     },
   });
@@ -852,7 +853,7 @@ async function verifyBundledArtifact({ artifactRoot, archivePath }) {
       archiveDownloads: archiveServer.getRequestCount(),
       installStatus: install.status,
       lifecycleState: serviceDetail.lifecycleState ?? null,
-      wrapper: path.basename(pkgExecutablePath),
+      wrapper: path.basename(nexeExecutablePath),
     };
   } finally {
     await shutdownSmokedHost(smoke, "SIGINT");
@@ -877,7 +878,7 @@ export async function stageReleaseArtifacts({ repoRoot, outputRoot = path.join(r
     artifactKind: "starter-template-source",
     relativePaths: sourceFiles,
     notes: [
-      "This artifact is the source template for the app-packager-pkg starter.",
+      "This artifact is the source template for the app-packager-nexe starter.",
       "It keeps the tracked services/ inventory but does not include installed dependencies or bundled runtime payloads.",
     ],
   });
@@ -890,12 +891,12 @@ export async function stageReleaseArtifacts({ repoRoot, outputRoot = path.join(r
     artifactKind: "runnable-bootstrap-download",
     relativePaths: runtimeFiles,
     notes: [
-      "This artifact is ready to run with installed dependencies, bundled Service Admin assets, and a pkg launcher executable.",
+      "This artifact is ready to run with installed dependencies, bundled Service Admin assets, a nexe launcher executable, and a bundled modern Node runtime.",
       "It keeps the canonical services/ inventory and installs the Echo Service archive from manifest-owned metadata before use.",
     ],
     installDependencies: true,
     adminDistRoot: resolvedAdminDistRoot,
-    buildPkgExecutable: true,
+    buildNexeExecutable: true,
   });
 
   const echoManifest = JSON.parse(await readFile(path.join(repoRoot, "services", "echo-service", "service.json"), "utf8"));
@@ -908,13 +909,13 @@ export async function stageReleaseArtifacts({ repoRoot, outputRoot = path.join(r
     artifactKind: "runnable-bundled",
     relativePaths: runtimeFiles,
     notes: [
-      "This artifact is ready to run with installed dependencies, bundled Service Admin assets, a pkg launcher executable, and an acquired Echo Service archive in services/.",
+      "This artifact is ready to run with installed dependencies, bundled Service Admin assets, a nexe launcher executable, a bundled modern Node runtime, and an acquired Echo Service archive in services/.",
       "It keeps the canonical services/ inventory and proves no first-run service download is required.",
     ],
     installDependencies: true,
     adminDistRoot: resolvedAdminDistRoot,
     bundledArchive,
-    buildPkgExecutable: true,
+    buildNexeExecutable: true,
   });
 
   return {
@@ -963,6 +964,6 @@ export async function verifyStagedArtifacts({ repoRoot, staged } = {}) {
   };
 }
 
-export async function createTemporaryOutputRoot(prefix = "service-lasso-app-packager-pkg-release-") {
+export async function createTemporaryOutputRoot(prefix = "service-lasso-app-packager-nexe-release-") {
   return mkdtemp(path.join(os.tmpdir(), prefix));
 }

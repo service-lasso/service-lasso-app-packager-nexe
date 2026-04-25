@@ -7,12 +7,12 @@ Each artifact has a different job:
 - runnable bootstrap-download package
 - runnable bundled package
 
-Runtime and bundled artifacts are platform-specific because the `pkg` wrapper executable is built for the current runner platform.
+Runtime and bundled artifacts are platform-specific because the `nexe` wrapper executable is built for the current runner platform.
 
 ## Source template
 
 Artifact:
-- `service-lasso-app-packager-pkg-<version>-source.tar.gz`
+- `service-lasso-app-packager-nexe-<version>-source.tar.gz`
 
 Purpose:
 - give downstream teams a downloadable starter repo shape
@@ -38,12 +38,12 @@ Honest label:
 ## Runnable bootstrap-download package
 
 Artifact:
-- `service-lasso-app-packager-pkg-<version>-runtime-<platform>.tar.gz`
+- `service-lasso-app-packager-nexe-<version>-runtime-<platform>.tar.gz`
 
 Purpose:
 - provide a ready-to-run Node host with the core runtime already installed
 - include bundled Service Admin assets for the host shell
-- include a `pkg` launcher executable at the artifact root
+- include a `nexe` launcher executable at the artifact root
 - keep the canonical repo-owned `services/` inventory inside the artifact
 - prove that Echo Service is acquired from manifest-owned release metadata before use
 
@@ -59,8 +59,8 @@ What ships:
 - bundled admin assets under `.payload/admin/`
 - bundled Node runtime under `node-runtime/`
 - packaged wrapper executable:
-  - `service-lasso-app-packager-pkg.exe` on Windows
-  - `service-lasso-app-packager-pkg` on POSIX
+  - `service-lasso-app-packager-nexe.exe` on Windows
+  - `service-lasso-app-packager-nexe` on POSIX
 - generated `release-artifact.json`
 
 How it works:
@@ -68,7 +68,7 @@ How it works:
 - that manifest carries the bounded `artifact` block pointing at the Echo Service release assets
 - on `install`, Service Lasso downloads and unpacks the matching archive from the manifest metadata
 - the app artifact itself does not ship the Echo Service archive
-- the `pkg` launcher loads the colocated app payload and boots the same host/runtime flow as `service-lasso-app-node`
+- the `nexe` launcher starts the colocated bundled modern Node runtime, which boots the same host/runtime flow as `service-lasso-app-node`
 
 Honest label:
 - **runnable bootstrap-download package**
@@ -76,12 +76,12 @@ Honest label:
 ## Runnable bundled package
 
 Artifact:
-- `service-lasso-app-packager-pkg-<version>-bundled-<platform>.tar.gz`
+- `service-lasso-app-packager-nexe-<version>-bundled-<platform>.tar.gz`
 
 Purpose:
 - provide a ready-to-run Node host with the core runtime already installed
 - include bundled Service Admin assets for the host shell
-- include a `pkg` launcher executable at the artifact root
+- include a `nexe` launcher executable at the artifact root
 - keep the canonical repo-owned `services/` inventory inside the artifact
 - prove that the Echo Service archive is already present before first install/use
 
@@ -102,7 +102,7 @@ Honest label:
 
 The release now proves:
 - the repo owns explicit tracked service metadata under `services/`
-- the `pkg` wrapper can launch the packaged Node host payload repeatably
+- the `nexe` wrapper can launch the packaged Node host payload repeatably
 - the runnable artifact can boot Service Lasso and Service Admin without sibling-repo checkout tricks
 - Echo Service acquisition depends on manifest-owned archive metadata instead of a generated local wrapper
 - bootstrap-download mode installs the service payload before first use
@@ -119,10 +119,10 @@ Local and CI installs resolve it from `https://registry.npmjs.org` without GitHu
 
 ## Commands
 
-Build the local `pkg` wrapper:
+Build the local `nexe` wrapper:
 
 ```bash
-npm run package:pkg
+npm run package:nexe
 ```
 
 Stage the release artifacts:
@@ -141,4 +141,4 @@ npm run release:verify
 
 Any application using Service Lasso should keep a tracked `services/` folder in its repo with the service metadata it intends to manage.
 
-This app-packager-pkg starter uses that tracked inventory directly and adds a bounded `pkg` launcher on top of the canonical app-node payload model.
+This app-packager-nexe starter uses that tracked inventory directly and adds a bounded `nexe` launcher on top of the canonical app-node payload model.
