@@ -1,6 +1,6 @@
 # Minimal POC
 
-This document defines the most minimal useful POC for `service-lasso-app-packager-pkg`.
+This document defines the most minimal useful POC for `service-lasso-app-packager-nexe`.
 
 It must use:
 - `service-lasso` as the runtime/API
@@ -9,13 +9,13 @@ It must use:
 
 ## POC goal
 
-Prove that the canonical Node host can be released behind a working `pkg` launcher while still exposing a usable admin UI and Echo Service as the first managed service.
+Prove that the canonical Node host can be released behind a working `nexe` launcher while still exposing a usable admin UI and Echo Service as the first managed service.
 
 ## Minimal shape
 
 The POC should:
 - keep the same app payload model as `service-lasso-app-node`
-- add a packaged `pkg` launcher executable
+- add a packaged `nexe` launcher executable
 - prepare a local `servicesRoot` that includes Echo Service
 - show host-owned startup or status output from the host itself
 - provide or bundle a local `lasso-@serviceadmin` build
@@ -26,7 +26,7 @@ The POC should:
 
 1. Runtime host:
    - one Node payload entrypoint that boots `service-lasso`
-   - one `pkg` launcher that starts that payload
+   - one `nexe` launcher that starts that payload through the bundled modern Node runtime
    - explicit `servicesRoot`
    - explicit `workspaceRoot`
 
@@ -61,7 +61,7 @@ The POC should:
 
 This bounded POC is now implemented in-repo:
 - `npm start` boots the published `@service-lasso/service-lasso` runtime from source
-- `npm run package:pkg` builds the local `pkg` launcher wrapper
+- `npm run package:nexe` builds the local `nexe` launcher wrapper
 - the host serves its own shell at `/`
 - the host mounts the sibling built `lasso-@serviceadmin` app at `/admin/`
 - the host prepares a tracked-manifest `servicesRoot` so `lasso-echoservice` is the discovered service under test
@@ -76,4 +76,4 @@ This POC does not yet need:
 
 It only needs to prove:
 
-**the canonical Node host can be wrapped with `pkg` and still run Service Lasso plus Service Admin against real Echo Service**
+**the canonical Node host can be wrapped with `nexe` and still run Service Lasso plus Service Admin against real Echo Service**

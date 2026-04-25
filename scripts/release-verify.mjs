@@ -9,7 +9,7 @@ const verified = await verifyStagedArtifacts({
   staged,
 });
 
-console.log("[service-lasso-app-packager-pkg] verified release artifacts");
+console.log("[service-lasso-app-packager-nexe] verified release artifacts");
 console.log(`- source artifact: ${verified.artifacts.source.artifactName}`);
 console.log(`- source archive: ${verified.artifacts.source.archivePath}`);
 console.log(`- runtime artifact: ${verified.artifacts.runtime.artifactName}`);

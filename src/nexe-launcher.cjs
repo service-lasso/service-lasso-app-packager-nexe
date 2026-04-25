@@ -1,26 +1,30 @@
 #!/usr/bin/env node
 
-const path = require("node:path");
-const { existsSync } = require("node:fs");
-const { access } = require("node:fs/promises");
-const { spawn } = require("node:child_process");
-const { pathToFileURL } = require("node:url");
+const path = require("path");
+const { access } = require("fs").promises;
+const { spawn } = require("child_process");
+const { pathToFileURL } = require("url");
+
+function isNodeRuntimeExecutable() {
+  const executableName = path.basename(process.execPath).toLowerCase();
+  return executableName === "node" || executableName === "node.exe";
+}
 
 async function main() {
-  const executableRoot = process.pkg ? path.dirname(process.execPath) : path.resolve(__dirname, "..");
-  const runtimeRoot = process.env.SERVICE_LASSO_APP_PACKAGER_PKG_PAYLOAD_ROOT ?? executableRoot;
+  const executableRoot = isNodeRuntimeExecutable() ? path.resolve(__dirname, "..") : path.dirname(process.execPath);
+  const runtimeRoot = process.env.SERVICE_LASSO_APP_PACKAGER_NEXE_PAYLOAD_ROOT ?? executableRoot;
   const entrypoint = path.join(runtimeRoot, "src", "index.js");
 
   await access(entrypoint);
 
-  if (!process.pkg) {
+  if (isNodeRuntimeExecutable()) {
     process.chdir(runtimeRoot);
     await import(pathToFileURL(entrypoint).href);
     return;
   }
 
   const bundledNodeBinary =
-    process.env.SERVICE_LASSO_APP_PACKAGER_PKG_NODE_BIN ??
+    process.env.SERVICE_LASSO_APP_PACKAGER_NEXE_NODE_BIN ??
     path.join(executableRoot, "node-runtime", process.platform === "win32" ? "node.exe" : "node");
 
   await access(bundledNodeBinary);
@@ -59,7 +63,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("[app-packager-pkg] pkg launcher failed");
+  console.error("[app-packager-nexe] nexe launcher failed");
   console.error(error?.stack ?? error);
   process.exit(1);
 });

@@ -6,7 +6,7 @@ import path from "node:path";
 import { prepareStarterServicesRoot } from "../src/services-root.js";
 
 test("starter servicesRoot is prepared from tracked service manifests without a generated wrapper", async () => {
-  const root = await mkdtemp(path.join(tmpdir(), "service-lasso-app-packager-pkg-services-"));
+  const root = await mkdtemp(path.join(tmpdir(), "service-lasso-app-packager-nexe-services-"));
   const sourceServicesRoot = path.join(root, "services-template");
   const servicesRoot = path.join(root, ".workspace", "services");
 

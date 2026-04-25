@@ -1,14 +1,14 @@
 {
-  "name": "@service-lasso/service-lasso-app-packager-pkg",
+  "name": "@service-lasso/service-lasso-app-packager-nexe",
   "version": "0.1.0",
   "private": true,
-  "description": "Template repo for a pkg-packaged Node Service Lasso app host.",
+  "description": "Template repo for a nexe-packaged Service Lasso app host.",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "test": "node --test --test-concurrency=1 tests/**/*.test.js",
-    "package:pkg": "node scripts/package-pkg.mjs",
+    "package:nexe": "node scripts/package-nexe.mjs",
     "release:artifact": "node scripts/release-artifact.mjs",
     "release:verify": "node scripts/release-verify.mjs"
   },

@@ -1,7 +1,7 @@
 {
   "id": "service-admin",
   "name": "Service Admin",
-  "description": "Embedded Service Admin UI surfaced by the app-packager-pkg starter host.",
+  "description": "Embedded Service Admin UI surfaced by the app-packager-nexe starter host.",
   "version": "0.1.0",
   "enabled": false,
   "urls": [

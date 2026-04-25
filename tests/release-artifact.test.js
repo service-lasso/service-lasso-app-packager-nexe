@@ -21,14 +21,14 @@ test("starter release artifacts can be staged and verified", async () => {
       outputRoot,
     });
 
-    assert.equal(staged.baseName, "service-lasso-app-packager-pkg-2026.4.23-abcdef1");
+    assert.equal(staged.baseName, "service-lasso-app-packager-nexe-2026.4.23-abcdef1");
     assert.equal(staged.artifacts.source.manifest.artifactKind, "starter-template-source");
     assert.equal(staged.artifacts.runtime.manifest.artifactKind, "runnable-bootstrap-download");
     assert.equal(staged.artifacts.bundled.manifest.artifactKind, "runnable-bundled");
     assert.match(staged.artifacts.runtime.artifactName, /-runtime-(win32|linux|darwin)$/);
     assert.match(staged.artifacts.bundled.artifactName, /-bundled-(win32|linux|darwin)$/);
-    assert.ok(staged.artifacts.runtime.pkgExecutablePath);
-    assert.ok(staged.artifacts.bundled.pkgExecutablePath);
+    assert.ok(staged.artifacts.runtime.nexeExecutablePath);
+    assert.ok(staged.artifacts.bundled.nexeExecutablePath);
     await stat(
       path.join(
         staged.artifacts.bundled.artifactRoot,
