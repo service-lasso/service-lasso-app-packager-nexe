@@ -7,7 +7,7 @@ export async function prepareStarterServicesRoot(config) {
   return {
     servicesRoot: config.servicesRoot,
     echoServiceRoot: path.join(config.servicesRoot, "echo-service"),
-    serviceAdminRoot: path.join(config.servicesRoot, "service-admin"),
+    serviceAdminRoot: path.join(config.servicesRoot, "@serviceadmin"),
     echoServiceManifestPath: path.join(config.servicesRoot, "echo-service", "service.json"),
   };
 }
