@@ -20,8 +20,10 @@ Current implementation:
 - published `@service-lasso/service-lasso` runtime package consumption
 - host-owned shell at `/`
 - mounted sibling `lasso-@serviceadmin` build at `/admin/`
-- tracked repo-owned `services/` definitions for Echo Service and Service Admin
+- tracked repo-owned baseline `services/` definitions for Echo Service, Service Admin, `@node`, `@localcert`, `@nginx`, and `@traefik`, plus disabled optional `@python` and `@java` provider examples
 - manifest-owned Echo Service archive metadata under `services/echo-service/service.json`
+- manifest-owned Traefik archive metadata under `services/@traefik/service.json`, with `@localcert` and `@nginx` declared as Traefik dependencies
+- core Service Lasso services use the `@` prefix: `@node`, `@python`, `@java`, `@localcert`, `@nginx`, `@traefik`, and `@serviceadmin`; `echo-service` stays unprefixed because it is the sample/test managed service
 - prepared local `servicesRoot` copied from the tracked service inventory before runtime startup
 
 Current local start command:

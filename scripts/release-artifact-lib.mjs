@@ -513,14 +513,19 @@ async function createVerificationReleaseFixture(rootDir, assetNameOverride = nul
 }
 
 async function acquireBundledServiceArchive(outputRoot, manifest, platform) {
+  const repo = manifest.artifact?.source?.repo;
   const releaseTag = manifest.artifact?.source?.tag;
   const platformArtifact = manifest.artifact?.platforms?.[platform] ?? manifest.artifact?.platforms?.default;
   const assetName = platformArtifact?.assetName;
-  const assetUrl = platformArtifact?.assetUrl;
+  const assetUrl =
+    platformArtifact?.assetUrl ??
+    (repo && releaseTag && assetName
+      ? `https://github.com/${repo}/releases/download/${encodeURIComponent(releaseTag)}/${encodeURIComponent(assetName)}`
+      : undefined);
 
   if (!releaseTag || !assetName || !assetUrl) {
     throw new Error(
-      `Cannot build bundled artifact for ${manifest.id}: service.json must define artifact.source.tag, assetName, and assetUrl.`,
+      `Cannot build bundled artifact for ${manifest.id}: service.json must define artifact.source.repo, artifact.source.tag, and assetName.`,
     );
   }
 
